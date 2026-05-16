@@ -26,6 +26,7 @@ insert into customer1(customer_id,customer_name) values (custid.nextval,'Niladri
 insert into customer1(customer_id,customer_name) values (custid.nextval,'Barsha');
 insert into customer1(customer_id,customer_name) values (custid.nextval,'Souvik');
 end;
+/
 
 
 CREATE TABLE CUSTOMER
@@ -109,6 +110,10 @@ COUNTRY,DATE_ADDED,REGION) values
 (12,'PETER','MANN','J','3456 GATES DRIVE',null,'Washington','USA',
 to_date('13-JAN-15','DD-MON-YY'),'NORTH');
 COMMIT;
+
+select *from CUSTOMER;
+
+
 
 -- data insertion into product table
 Insert into PRODUCT
@@ -598,4 +603,239 @@ Insert into SALESPERSON
 ADDRESS_LINE2,CITY,COUNTRY,DATE_ADDED,MANAGER) values
 (13000,'Entry Level','Sara','K','E','678 larawd st',null,'Mississippi','USA',
 to_date('23-FEB-14','DD-MON-RR'),'Bob');
-COMMIT;
+COMMIT; 
+
+
+--analytical function starts 
+
+-- 1. Without Analytical Function
+-- Display overall average total_amount along with every sales row
+
+Select
+s.sales_date,
+s.order_id,
+s.product_id,
+s.customer_id,
+s.salesperson_id,
+s.total_amount,
+avg_data.avg_total_amount
+from sales s,
+(
+    Select round(avg(total_amount),2) as avg_total_amount
+    from sales
+) avg_data;
+
+-- 2. Using Analytical Function
+-- Display overall average total_amount along with every sales row
+
+Select
+s.sales_date,
+s.order_id,
+s.product_id,
+s.customer_id,
+s.salesperson_id,
+s.total_amount,
+round(avg(total_amount) over (),2) as avg_total_amount
+from sales s;
+
+
+-- 3. Without Analytical Function
+-- Display date-wise average total_amount along with every sales row
+
+Select
+s.sales_date,
+s.order_id,
+s.product_id,
+s.customer_id,
+s.salesperson_id,
+s.total_amount,
+savg.avg_total_amount
+from sales s,
+(
+    Select
+    sales_date,
+    round(avg(total_amount),2) as avg_total_amount
+    from sales
+    group by sales_date
+) savg
+where s.sales_date = savg.sales_date
+order by s.sales_date;
+
+
+-- 4. Using Analytical Function
+-- Display date-wise average total_amount along with every sales row
+
+Select
+s.sales_date,
+s.order_id,
+s.product_id,
+s.customer_id,
+s.salesperson_id,
+s.total_amount,
+round(avg(total_amount) over (partition by sales_date),2) as avg_total_amount
+from sales s
+order by s.sales_date;
+
+-- 5.Analyticla function 
+-- to show aggreagte level data on different level average_total,avearage day-today and average by month
+Select
+s.sales_date,
+s.order_id,
+s.product_id,
+s.total_amount,
+
+round(avg(total_amount) over(),2) as avg_total,
+
+round(avg(total_amount) over(partition by sales_date),2) as avg_by_day,
+
+round(avg(total_amount) over(partition by trunc(sales_date,'mon')),2) as avg_by_month
+
+from sales s
+order by 1;
+
+--Calculating cumulative sum using analytical function
+
+Select
+s.sales_date,
+s.order_id,
+s.product_id,
+sales_amount,
+
+sum(sales_amount)
+over(order by s.sales_date,s.order_id,s.product_id) as cum_sum
+
+from sales s
+order by 1;
+
+--Calculating percentage contribution to sales
+--with the help ratio_to_report() function
+Select
+trunc(sales_date,'mon') as sales_month,
+
+sum(total_amount) as total_amount,
+
+round(ratio_to_report(sum(total_amount)) over() * 100,1) as ratio_per
+
+from sales
+group by trunc(sales_date,'mon')
+order by 1;
+
+--Using rank function
+
+select
+trunc(sales_date,'mon') as sales_month,
+
+sp.first_name,
+
+sum(sales_amount) as sales_amount,
+
+rank() over
+(
+ partition by trunc(sales_date,'mon')
+ order by sum(sales_amount) desc
+) as month_rank
+
+from sales s,
+salesperson sp
+
+where s.salesperson_id = sp.salesperson_id
+
+group by trunc(sales_date,'mon'),
+sp.first_name
+
+order by 1;
+
+--Top N analysis using Rank() function
+
+Select * from
+(
+    select
+    trunc(sales_date,'mon') as sales_month,
+
+    sp.first_name,
+
+    sum(sales_amount) as sales_amount,
+
+    rank() over
+    (
+        partition by trunc(sales_date,'mon')
+        order by sum(sales_amount) desc
+    ) as month_rank
+
+    from sales s,
+         salesperson sp
+
+    where s.salesperson_id = sp.salesperson_id
+
+    group by trunc(sales_date,'mon'),
+             sp.first_name
+
+    order by 1
+)
+where month_rank <= 3;
+
+--Banding using NTILE() function
+
+select
+sp.first_name,
+
+sum(total_amount) as total_amount,
+
+ntile(3)
+over(order by sum(total_amount) desc) as bucket_list
+
+from sales s,
+salesperson sp
+
+where s.salesperson_id = sp.salesperson_id
+
+group by sp.first_name
+
+order by 3;
+
+--Using LAG() and LEAD() in analytical functions
+
+select
+
+trunc(sales_date,'mon') as sales_month,
+
+sum(total_amount) as total_amount,
+
+LAG(sum(total_amount),1)
+over(order by trunc(sales_date,'mon')) as previous_month,
+
+LEAD(sum(total_amount),1)
+over(order by trunc(sales_date,'mon')) as next_month
+
+from sales s
+
+group by trunc(sales_date,'mon');
+
+--growth %age calculation using analytical functions
+
+Select
+sales_month,
+sales_amount,
+previous_month,
+
+round(((sales_amount-previous_month)
+/previous_month)*100,2) as Growth_Per
+
+from
+(
+    select
+
+    trunc(sales_date,'mon') as sales_month,
+
+    sum(sales_amount) as sales_amount,
+
+    LAG(sum(sales_amount),1)
+    over(order by trunc(sales_date,'mon')) as previous_month,
+
+    LEAD(sum(sales_amount),1)
+    over(order by trunc(sales_date,'mon')) as next_month
+
+    from sales s
+
+    group by trunc(sales_date,'mon')
+);
