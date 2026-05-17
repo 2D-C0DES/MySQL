@@ -839,3 +839,37 @@ from
 
     group by trunc(sales_date,'mon')
 );
+
+--hierarchical functions
+
+SELECT
+top_boss,
+first_name,
+SUM(total_amount) AS total_sales
+FROM
+(
+    SELECT
+    salesperson_id,
+    first_name,
+    job_title,
+    manager,
+    LEVEL,
+    CONNECT_BY_ROOT first_name AS top_boss
+    FROM salesperson
+    CONNECT BY PRIOR first_name = manager
+    START WITH manager = 'Raj'
+) hier,
+sales
+WHERE hier.salesperson_id = sales.salesperson_id
+GROUP BY top_boss, first_name;
+
+--hierarchical functions
+
+SELECT
+salesperson_id,
+first_name,
+LEVEL,
+SYS_CONNECT_BY_PATH(first_name,'/') AS hier
+FROM salesperson
+CONNECT BY PRIOR first_name = manager
+START WITH manager = 'Jeff';
