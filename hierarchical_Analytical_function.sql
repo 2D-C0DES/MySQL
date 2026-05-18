@@ -1,3 +1,7 @@
+DROP TABLE DEPARTMENTS;
+DROP TABLE JOBS;
+DROP TABLE EMPLOYEES;
+
 CREATE TABLE DEPARTMENTS
 (
     DEPARTMENT_ID NUMBER(5),
@@ -164,3 +168,256 @@ CONNECT BY PRIOR employee_id = manager_id
 START WITH manager_id IS NULL;
 
 
+
+-- PL/SQL
+
+-- Variable Declaration
+SET SERVEROUTPUT ON;
+
+DECLARE
+    test_var1 NUMBER;
+    var_test1 VARCHAR2(30) := 'Hello World';
+
+BEGIN
+    test_var1 := 10;
+    
+
+    DBMS_OUTPUT.PUT_LINE(test_var1);
+    DBMS_OUTPUT.PUT_LINE(var_test1);
+END;
+/
+
+--  Selecting values from tables
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+    var_salary NUMBER(8);
+
+BEGIN
+    SELECT salary
+    INTO var_salary
+    FROM employees
+    WHERE EMPLOYEE_ID = 100;
+
+    DBMS_OUTPUT.PUT_LINE('Salary is ' || var_salary);
+
+END;
+/
+
+
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+    var_salary NUMBER(8);
+    var_fname VARCHAR2(20);
+
+BEGIN
+    SELECT salary, first_name
+    INTO var_salary, var_fname
+    FROM employees
+    WHERE employee_id = 100;
+
+    DBMS_OUTPUT.PUT_LINE('Salary is ' || var_salary);
+
+    DBMS_OUTPUT.PUT_LINE('Name is ' || var_fname);
+
+END;
+/
+
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+    v_salary NUMBER(8);
+    v_fname VARCHAR2(20);
+
+BEGIN
+    SELECT first_name, salary
+    INTO v_fname, v_salary
+    FROM employees
+    WHERE employee_id = 100;
+
+    DBMS_OUTPUT.PUT_LINE
+    (
+        v_fname || ' has salary ' || v_salary
+    );
+
+END;
+/
+
+
+-- %TYPE
+
+desc employees;
+SET SERVEROUTPUT ON;
+
+DECLARE
+    v_fname employees.first_name%TYPE;
+
+BEGIN
+    SELECT first_name
+    INTO v_fname
+    FROM employees
+    WHERE employee_id = 100;
+
+    DBMS_OUTPUT.PUT_LINE(v_fname);
+
+END;
+/
+
+-- Conditional Statements
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+    v_num NUMBER := 9;
+
+BEGIN
+
+    IF v_num < 10 THEN
+        DBMS_OUTPUT.PUT_LINE('Inside The IF');
+    END IF;
+
+    DBMS_OUTPUT.PUT_LINE('Outside The IF');
+
+END;
+/
+
+
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+    v_num NUMBER := &enter_a_number;
+
+BEGIN
+
+    IF MOD(v_num,2) = 0 THEN
+
+        DBMS_OUTPUT.PUT_LINE(v_num || ' Is Even');
+
+    ELSE
+
+        DBMS_OUTPUT.PUT_LINE(v_num || ' Is Odd');
+
+    END IF;
+
+    DBMS_OUTPUT.PUT_LINE('IF THEN ELSE Construct Complete');
+
+END;
+/
+
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+    v_place VARCHAR2(30) := '&Enter_Place';
+
+BEGIN
+
+    IF v_place = 'Metropolis' THEN
+
+        DBMS_OUTPUT.PUT_LINE
+        (
+            'This City Is Protected By Superman'
+        );
+
+    ELSIF v_place = 'Gotham' THEN
+
+        DBMS_OUTPUT.PUT_LINE
+        (
+            'This City Is Protected By Batman'
+        );
+
+    ELSIF v_place = 'Amazon' THEN
+
+        DBMS_OUTPUT.PUT_LINE
+        (
+            'This City Is Protected By Wonder Woman'
+        );
+
+    ELSE
+
+        DBMS_OUTPUT.PUT_LINE
+        (
+            'Please Call Avengers'
+        );
+
+    END IF;
+
+    DBMS_OUTPUT.PUT_LINE
+    (
+        'Thanks For Contacting Us'
+    );
+
+END;
+/
+
+-- loops
+
+DECLARE
+    v_counter NUMBER :=0;
+    v_result NUMBER;
+BEGIN
+    LOOP
+        v_counter := v_counter+1;
+
+        v_result := 19*v_counter;
+
+        DBMS_OUTPUT.PUT_LINE('19'||' x '||v_counter||' = '||
+        v_result);
+
+        EXIT WHEN v_counter>=10;
+
+    END LOOP;
+END;
+/
+
+
+DECLARE
+    v_counter NUMBER :=1;
+    v_result NUMBER ;
+BEGIN
+
+    WHILE v_counter <= 10
+    LOOP
+
+        v_result := 9 *v_counter;
+
+        DBMS_OUTPUT.PUT_LINE(
+        '9'||' x '||v_counter||' = '||v_result);
+
+        v_counter := v_counter+1;
+
+    END LOOP;
+
+    DBMS_OUTPUT.PUT_LINE('out');
+
+END;
+/
+
+
+SET SERVEROUTPUT ON;
+
+BEGIN
+
+    FOR v_counter IN 1..10 LOOP
+
+        DBMS_OUTPUT.PUT_LINE(v_counter);
+
+    END LOOP;
+
+END;
+/
+
+
+BEGIN
+    FOR v_counter IN REVERSE 1..10 LOOP
+
+        DBMS_OUTPUT.PUT_LINE(v_counter);
+
+    END LOOP;
+END;
+/
