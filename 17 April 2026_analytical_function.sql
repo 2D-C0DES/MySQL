@@ -842,6 +842,8 @@ from
 
 --hierarchical functions
 
+-- Roll Up Functions
+
 SELECT
 top_boss,
 first_name,
@@ -873,3 +875,160 @@ SYS_CONNECT_BY_PATH(first_name,'/') AS hier
 FROM salesperson
 CONNECT BY PRIOR first_name = manager
 START WITH manager = 'Jeff';
+
+-- Extensions to groub by
+
+SELECT
+TRUNC(s.sales_date,'MON') AS sales_month,
+p.product_name,
+c.city,
+SUM(s.total_amount) AS total_sales
+FROM sales s
+JOIN product p
+ON s.product_id = p.product_id
+JOIN customer c
+ON s.customer_id = c.customer_id
+GROUP BY
+ROLLUP
+(
+TRUNC(s.sales_date,'MON'),
+p.product_name,
+c.city
+)
+ORDER BY 1,2,3;
+
+-- Cube functions 
+
+SELECT
+TRUNC(s.sales_date,'MON') AS sales_month,
+p.product_name,
+c.city,
+SUM(s.total_amount) AS total_sales
+FROM sales s
+JOIN product p
+ON s.product_id = p.product_id
+JOIN customer c
+ON s.customer_id = c.customer_id
+GROUP BY
+CUBE
+(
+TRUNC(s.sales_date,'MON'),
+p.product_name,
+c.city
+)
+ORDER BY 1,2,3;
+
+-----------------
+
+SELECT
+TRUNC(s.sales_date,'MON') AS sales_month,
+p.product_name,
+SUM(s.sales_amount) AS sales_amount
+FROM sales s,
+product p
+WHERE s.product_id = p.product_id
+GROUP BY
+TRUNC(s.sales_date,'MON'),
+p.product_name
+ORDER BY
+TRUNC(s.sales_date,'MON'),
+p.product_name;
+
+-------------------------------
+--  Group by rollup
+
+SELECT
+TRUNC(s.sales_date,'MON') AS sales_month,
+p.product_name,
+SUM(s.sales_amount) AS sales_amount
+FROM sales s,
+product p
+WHERE s.product_id = p.product_id
+GROUP BY
+ROLLUP
+(
+TRUNC(s.sales_date,'MON'),
+p.product_name
+)
+ORDER BY
+TRUNC(s.sales_date,'MON'),
+p.product_name;
+
+----------------------------------
+--Group by cube
+
+SELECT
+TRUNC(s.sales_date,'MON') AS sales_month,
+p.product_name,
+SUM(s.sales_amount) AS sales_amount
+FROM sales s,
+product p
+WHERE s.product_id = p.product_id
+GROUP BY
+CUBE
+(
+TRUNC(s.sales_date,'MON'),
+p.product_name
+)
+ORDER BY
+TRUNC(s.sales_date,'MON'),
+p.product_name;
+
+--------------------------
+--Grouping 
+
+SELECT
+TRUNC(s.sales_date,'MON') AS sales_month,
+p.product_name,
+
+GROUPING(TRUNC(s.sales_date,'MON')) AS flag1,
+GROUPING(p.product_name) AS flag2,
+
+SUM(s.sales_amount) AS sales_amount
+
+FROM sales s,
+product p
+
+WHERE s.product_id = p.product_id
+
+GROUP BY
+CUBE
+(
+TRUNC(s.sales_date,'MON'),
+p.product_name
+)
+
+ORDER BY
+TRUNC(s.sales_date,'MON'),
+p.product_name;
+
+----------------------------
+--GROUPING_ID function
+
+SELECT
+TRUNC(s.sales_date,'MON') AS sales_month,
+p.product_name,
+
+GROUPING_ID
+(
+TRUNC(s.sales_date,'MON'),
+p.product_name
+) AS flag_id,
+
+SUM(s.sales_amount) AS sales_amount
+
+FROM sales s,
+product p
+
+WHERE s.product_id = p.product_id
+
+GROUP BY
+CUBE
+(
+TRUNC(s.sales_date,'MON'),
+p.product_name
+)
+
+ORDER BY
+TRUNC(s.sales_date,'MON'),
+p.product_name;
