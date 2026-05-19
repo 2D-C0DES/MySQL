@@ -30,6 +30,31 @@ CREATE TABLE EMPLOYEES
     DEPARTMENT_ID NUMBER(5)
 );
 
+CREATE TABLE SUPERHEROES
+(
+    HERO_ID NUMBER(5),
+    HERO_NAME VARCHAR2(30),
+    SUPER_POWER VARCHAR2(50),
+    CITY VARCHAR2(30)
+);
+
+--Data insertion into table superheroes
+INSERT INTO SUPERHEROES
+VALUES (1,'SUPERMAN','FLYING','METROPOLIS');
+
+INSERT INTO SUPERHEROES
+VALUES (2,'BATMAN','INTELLIGENCE','GOTHAM');
+
+INSERT INTO SUPERHEROES
+VALUES (3,'WONDER WOMAN','SUPER STRENGTH','AMAZON');
+
+INSERT INTO SUPERHEROES
+VALUES (4,'FLASH','SUPER SPEED','CENTRAL CITY');
+
+INSERT INTO SUPERHEROES
+VALUES (5,'AQUAMAN','UNDERWATER CONTROL','ATLANTIS');
+
+COMMIT;
 
 -- INSERT INTO DEPARTMENTS
 
@@ -419,5 +444,274 @@ BEGIN
         DBMS_OUTPUT.PUT_LINE(v_counter);
 
     END LOOP;
+END;
+/
+
+
+-- Triggers
+
+SET SERVEROUTPUT ON
+CREATE OR REPLACE TRIGGER bi_trigger_emp
+BEFORE INSERT ON EMPLOYEES
+FOR EACH ROW
+ENABLE
+
+DECLARE
+    v_user VARCHAR2 (15);
+
+BEGIN
+
+    SELECT user INTO v_user FROM dual;
+
+    DBMS_OUTPUT.PUT_LINE(
+    'You Just Inserted a Row Mr.'|| v_user);
+
+END;
+/
+
+SET SERVEROUTPUT ON
+CREATE OR REPLACE TRIGGER bu_trigger_emp
+BEFORE UPDATE ON EMPLOYEES
+FOR EACH ROW
+ENABLE
+
+DECLARE
+    v_user VARCHAR2 (15);
+
+BEGIN
+
+    SELECT user INTO v_user FROM dual;
+
+    DBMS_OUTPUT.PUT_LINE(
+    'You Just Updated a Row Mr.'|| v_user);
+
+END;
+/
+
+SET SERVEROUTPUT ON
+CREATE OR REPLACE TRIGGER bd_trigger_emp
+BEFORE DELETE ON EMPLOYEES
+FOR EACH ROW
+ENABLE
+
+DECLARE
+    v_user VARCHAR2 (15);
+
+BEGIN
+
+    SELECT user INTO v_user FROM dual;
+
+    DBMS_OUTPUT.PUT_LINE(
+    'You Just Deleted a Row Mr.'|| v_user);
+
+END;
+/
+
+-- Inserting or deleting this row to check the triggers
+INSERT INTO EMPLOYEES VALUES (141,'Karuna','Sharma','SA_REP',120,TO_DATE('25-OCT-15','DD-MON-YY'),7800,0.10,40);
+
+--deleting this row to check the triggers
+delete from employees 
+where employee_id = 141;
+
+--Updating the table to check the triggers
+UPDATE EMPLOYEES
+SET SALARY = 22000
+WHERE employee_id = 102;
+
+
+SET SERVEROUTPUT ON
+CREATE OR REPLACE TRIGGER tr_superheroes
+BEFORE INSERT OR DELETE OR UPDATE
+ON superheroes
+FOR EACH ROW
+ENABLE
+
+DECLARE
+    v_user VARCHAR2(15);
+
+BEGIN
+
+    SELECT user INTO v_user FROM dual;
+
+    IF INSERTING THEN
+
+        DBMS_OUTPUT.PUT_LINE(
+        'one line inserted by '||v_user);
+
+    ELSIF DELETING THEN
+
+        DBMS_OUTPUT.PUT_LINE(
+        'one line Deleted by '||v_user);
+
+    ELSIF UPDATING THEN
+
+        DBMS_OUTPUT.PUT_LINE(
+        'one line Updated by '||v_user);
+
+    END IF;
+
+END;
+/
+
+--checking compposite trigger on superheroes table
+
+INSERT INTO SUPERHEROES
+VALUES (6,'SUPERBAT','CRAWLING','METROPOLIS');
+
+delete from SUPERHEROES
+where hero_id = 1;
+
+update superheroes 
+set hero_name = 'darkside'
+where hero_id = 5;
+
+
+
+
+-- Cuursors
+
+-- Cursor 1
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+
+    v_name VARCHAR2(30);
+
+    CURSOR cur_emp IS
+    SELECT first_name
+    FROM EMPLOYEES
+    WHERE employee_id < 105;
+
+BEGIN
+
+    OPEN cur_emp;
+
+    LOOP
+
+        FETCH cur_emp INTO v_name;
+
+        DBMS_OUTPUT.PUT_LINE(v_name);
+
+        EXIT WHEN cur_emp%NOTFOUND;
+
+    END LOOP;
+
+    CLOSE cur_emp;
+
+END;
+/
+
+-- Cursor 2
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+
+    v_name VARCHAR2 (30);
+
+    CURSOR p_cur_emp (var_e_id VARCHAR2) IS
+    SELECT first_name
+    FROM EMPLOYEES
+    WHERE employee_id < var_e_id;
+
+BEGIN
+
+    OPEN p_cur_emp (105);
+
+    LOOP
+
+        FETCH p_cur_emp INTO v_name;
+
+        EXIT WHEN p_cur_emp %NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE(v_name );
+
+    END LOOP;
+
+    CLOSE p_cur_emp ;
+
+END;
+/
+
+-- Cursor 3
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+    v_name VARCHAR2(30);
+    v_eid NUMBER(10);
+
+    CURSOR cur_emp(var_e_id NUMBER := 120)
+    IS
+    SELECT first_name, employee_id
+    FROM employees
+    WHERE employee_id > var_e_id;
+
+BEGIN
+
+    OPEN cur_emp;
+
+    LOOP
+
+        FETCH cur_emp INTO v_name, v_eid;
+
+        EXIT WHEN cur_emp%NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE(v_name || ' ' || v_eid);
+
+    END LOOP;
+
+    CLOSE cur_emp;
+
+END;
+/
+
+
+-- Cusror 4
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+
+    CURSOR cur_emp IS
+    SELECT first_name, last_name
+    FROM employees
+    WHERE employee_id > 110;
+
+BEGIN
+
+    FOR l_idx IN cur_emp
+    LOOP
+
+        DBMS_OUTPUT.PUT_LINE
+        (l_idx.first_name || ' ' || l_idx.last_name);
+
+    END LOOP;
+
+END;
+/
+
+-- Cursor 5
+
+SET SERVEROUTPUT ON;
+
+BEGIN
+
+    FOR l_idx IN
+    (
+        SELECT first_name, last_name
+        FROM employees
+        WHERE employee_id > 130
+    )
+
+    LOOP
+
+        DBMS_OUTPUT.PUT_LINE
+        (l_idx.first_name || ' ' || l_idx.last_name);
+
+    END LOOP;
+
 END;
 /
